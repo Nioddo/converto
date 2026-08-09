@@ -1,6 +1,0 @@
-{
-  "functions": {
-    "app/api/convert/route.js": { "maxDuration": 60 },
-    "app/api/resolve/route.js": { "maxDuration": 60 }
-  }
-}

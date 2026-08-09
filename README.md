@@ -1,129 +1,82 @@
 # 🎧 Converto
 
-Convierte **videos y playlists de YouTube** a **MP3 320 kbps (CBR)** o **FLAC**, con una regla clave:
-los archivos salen **sin metadatos, sin etiquetas ID3 y sin carátula/portada**, y con **nombres de archivo
-limpios** (sin tildes, sin ñ, sin emojis ni símbolos). Ideal para reproductores MP3 básicos —como los de
+App de escritorio para Windows que convierte **videos/playlists de YouTube** y **playlists de Spotify** a
+**MP3 320 kbps (CBR)** o **FLAC**, con archivos **sin metadatos, sin etiquetas ID3 y sin carátula**, y con
+**nombres limpios** (sin tildes, ñ, emojis ni símbolos). Pensada para reproductores MP3 básicos —como los de
 auriculares de conducción ósea— que se cuelgan cuando el archivo trae imágenes o tags.
 
-La conversión es **real**: se baja el mejor audio con `yt-dlp` y se **recodifica con `ffmpeg`** (no se
-renombra un `.m4a`/`.webm`).
+La conversión es **real**: baja el mejor audio con `yt-dlp` y lo **recodifica con `ffmpeg`** (no renombra archivos).
 
 ---
 
-## Cómo usarla en tu PC (recomendado y más confiable)
+## 📥 Instalar (para usar, sin comandos)
 
-Requisitos: solo **Node.js** (ya lo tenés). `ffmpeg` y `yt-dlp` se resuelven solos.
+1. Andá a la sección **[Releases](https://github.com/Nioddo/converto/releases)** del repo.
+2. Descargá el archivo **`Converto-Setup-x.x.x.exe`**.
+3. Doble clic para instalar. Como no está firmado con un certificado pago, Windows puede mostrar
+   *"Windows protegió tu PC"* → tocá **Más información → Ejecutar de todas formas**.
+4. Se crea un acceso directo en el escritorio y en el menú de inicio. **Doble clic y listo.**
 
-1. Abrí una terminal en esta carpeta.
-2. Instalá las dependencias (una sola vez):
+> La primera vez que convertís algo, la app descarga sola su motor de descarga (`yt-dlp`, unos segundos).
+> Necesitás conexión a internet para descargar y convertir.
 
-   ```bash
-   npm install
-   ```
+## ▶️ Cómo se usa
 
-3. Arrancá la app:
-
-   ```bash
-   npm run dev
-   ```
-
-4. Abrí el navegador en **http://localhost:3000**
-5. Pegá uno o más links de YouTube (un video o una playlist), elegí **MP3** o **FLAC**, y tocá **Procesar**.
-   Se convierte pista por pista y al final se descarga un **.zip** con todo.
-6. Conectá los auriculares por USB y copiá los archivos del ZIP.
-
-> La primera vez, `yt-dlp` se descarga automáticamente (unos segundos) y queda guardado en `.bin/`.
+1. Pegá uno o más links (YouTube o Spotify), un por línea.
+2. Elegí el formato (**MP3 320** o **FLAC**) y, si querés, dejá activado el identificador de voz por defecto.
+3. Tocá **Buscar temas**: aparece la lista.
+4. En cada tema podés prender/apagar el **🔊 identificador de voz** y **escribir el texto** que quieras que lea
+   (por defecto lee el título).
+5. Tocá **Procesar y guardar**: elegís una carpeta (puede ser el **pendrive o los auriculares**) y se guarda
+   cada archivo ahí, suelto, listo para copiar.
 
 ---
 
-## Desplegar en Vercel (URL pública)
+## Características
+
+- **YouTube**: video suelto, o playlist completa (con opción de traer solo el tema aunque el link tenga `&list=`).
+- **Spotify**: playlist / álbum / tema. Como Spotify no deja bajar audio, lee la lista (página pública de Spotify)
+  y **busca y baja cada tema desde YouTube**. Sin credenciales.
+  - Límites de Spotify: la playlist debe ser **pública**, se leen hasta **~100 temas**, y las playlists creadas
+    por Spotify (Top 50, mixes) normalmente no se pueden leer. Usá playlists tuyas o de otros usuarios.
+- **Sin metadatos ni carátula**: `ffmpeg -vn -map 0:a:0 -map_metadata -1 -map_chapters -1`; MP3 con
+  `-id3v2_version 0 -write_id3v1 0`.
+- **Identificador de voz** (opcional, por tema): una voz lee el título (o tu texto) 2-5 s, **embebido en el mismo
+  archivo** sin perder calidad de la música (una sola recodificación; FLAC queda en 24-bit igual que sin voz).
+- **Nombres limpios**: NFD + saca acentos, ñ→n, elimina emojis/símbolos, recorta a 80 caracteres.
+
+---
+
+## 🛠️ Para desarrolladores (compilar desde el código)
+
+Requisitos: Node.js.
 
 ```bash
-npm i -g vercel   # una sola vez
-vercel            # seguí los pasos; luego "vercel --prod"
+npm install        # instala dependencias (Electron, ffmpeg-static, empaquetador)
+npm start          # abre la app en modo desarrollo
+npm run dist       # genera el instalador en dist/  (Converto-Setup-x.x.x.exe)
 ```
 
-⚠️ **Aviso honesto sobre Vercel:** YouTube suele **bloquear las IPs de servidores en la nube** con un
-"confirmá que no sos un robot". Cuando eso pasa, las descargas fallan aunque el código esté perfecto.
-Además cada conversión tiene ~60 s de límite. Por eso la app procesa **una canción por request** y arma
-el ZIP en el navegador. Si en Vercel te fallan las descargas, **usá la versión local** (`npm run dev`):
-es exactamente la misma app y ahí sí funciona porque usa tu conexión de casa.
-
----
-
-## Qué hace exactamente con el audio
-
-Para cada pista, después de bajar el mejor audio, corre ffmpeg así:
-
-- **MP3:** `-c:a libmp3lame -b:a 320k` (CBR) · `-id3v2_version 0 -write_id3v1 0` (sin tags)
-- **FLAC:** `-c:a flac`
-- En ambos: `-vn -map 0:a:0 -map_metadata -1 -map_chapters -1` → **solo la pista de audio**, sin portada,
-  sin metadatos, sin capítulos.
-
-Y el nombre del archivo pasa por una limpieza: NFD + borrado de acentos, ñ→n, se eliminan emojis y símbolos,
-quedan solo letras/números/espacios/guiones y se recorta a 80 caracteres.
-
----
-
-## Flujo de uso (dos pasos)
-
-1. Pegá los links (YouTube o Spotify), elegí formato y si querés identificador por defecto, y tocá **Buscar temas**.
-2. Aparece la lista de temas. En cada uno podés prender/apagar el **identificador de voz** (🔊) y escribir un
-   texto distinto al título. Después tocá **Procesar y descargar**.
-
-**Cómo se guarda:** un solo tema se descarga directo. Con varios (playlist), en Chrome/Edge el navegador te pide
-**elegir una carpeta** y va escribiendo cada archivo ahí a medida que convierte (podés elegir directo el pendrive o
-los auriculares); así no se llena la memoria del navegador aunque la playlist sea grande. En otros navegadores
-(Firefox/Safari) cae a un **ZIP** con los archivos sueltos, pero para playlists muy grandes conviene Chrome/Edge.
-
----
-
-## Spotify
-
-Podés pegar el link de una **playlist, álbum o tema de Spotify**. Como Spotify no deja bajar el audio, la app
-lee la lista (usando la página pública de *embed* de Spotify) y después **busca y baja cada tema desde YouTube**.
-**No hacen falta credenciales ni nada que configurar.**
-
-> ⚠️ Límites: la playlist tiene que ser **pública**, se leen hasta **~100 temas** (playlists más grandes pueden salir
-> recortadas) y las playlists **creadas por Spotify** (Top 50, Descubrimiento semanal, mixes) normalmente no se pueden
-> leer. Usá playlists **tuyas o de otros usuarios** y públicas.
-
----
-
-## Identificador de voz (opcional)
-
-Podés activar un **identificador de voz** que lee el título en voz alta (2-5 s) al empezar cada pista —
-útil en reproductores sin pantalla. La voz se genera con el TTS de Google (español) y se **incrusta en el
-mismo archivo**: se pega `voz + 0.4 s de silencio + música` a nivel de audio y se codifica **una sola vez**,
-así que **la música no pierde nada de calidad** (MP3 sigue 320 kbps, FLAC sigue 24-bit). Se elige con el
-selector "Con / Sin identificador".
-
-Si el TTS de Google no responde (por ejemplo, IP bloqueada en la nube), la pista se convierte igual pero
-**sin** el identificador, para no perder la canción.
-
----
-
-## Estructura del proyecto
+Estructura:
 
 ```
-app/
-  layout.js              layout raíz
-  page.js                interfaz (pegar links, elegir formato, progreso, ZIP)
-  globals.css            estilos
-  api/
-    resolve/route.js     expande un link a lista de pistas (playlists incluidas)
-    convert/route.js     baja + recodifica una pista y la devuelve
+electron/
+  main.js       proceso principal (ventana + descarga/convierte/guarda)
+  preload.js    puente seguro hacia la interfaz
+public/
+  index.html    interfaz
+  app.js        lógica de la interfaz
+  style.css     estilos
 lib/
-  audio.js               lógica de yt-dlp + ffmpeg (y mezcla del identificador)
-  binaries.js            ubica/descarga yt-dlp y ffmpeg
-  sanitize.js            limpieza de nombres de archivo
-  tts.js                 identificador de voz (Google TTS)
-  spotify.js             lee la lista de una playlist/álbum de Spotify (sin credenciales)
-next.config.js           config (ffmpeg-static externo + tracing)
-vercel.json              límite de 60 s por función
+  audio.js      yt-dlp + ffmpeg (y mezcla del identificador)
+  binaries.js   ubica/descarga yt-dlp; ruta de ffmpeg
+  spotify.js    lee la lista de una playlist/álbum de Spotify (sin credenciales)
+  tts.js        identificador de voz (Google TTS)
+  sanitize.js   limpieza de nombres de archivo
 ```
+
+`ffmpeg` viene de `ffmpeg-static` (empaquetado). `yt-dlp` se descarga solo a una carpeta del usuario la primera vez.
 
 ## Solo para uso personal
 
-Descargá únicamente contenido que tengas derecho a usar. Esta herramienta es para pasar tu propia música
-a un reproductor básico.
+Descargá únicamente contenido que tengas derecho a usar.

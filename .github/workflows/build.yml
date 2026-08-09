@@ -1,0 +1,42 @@
+name: Build installer
+
+# Construye el instalador de Windows (.exe) en la nube, donde electron-builder
+# tiene los permisos que faltan localmente, y lo sube a la Release indicada.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de la release donde subir el instalador (ej: v1.0.0)"
+        required: true
+        default: v1.0.0
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Construir instalador (NSIS)
+        run: npm run dist
+
+      - name: Subir instalador a la Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        shell: bash
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Converto $TAG" --notes "Instalador de Converto para Windows."
+          gh release upload "$TAG" dist/*.exe --clobber

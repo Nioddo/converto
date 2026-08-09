@@ -2,17 +2,42 @@
   "name": "converto",
   "version": "1.0.0",
   "private": true,
-  "description": "Convierte YouTube a MP3 320 / FLAC sin metadatos ni caratulas, listo para reproductores MP3 basicos",
+  "description": "Convierte YouTube y Spotify a MP3 320/FLAC sin metadatos ni caratulas, para reproductores MP3 basicos",
+  "author": "Nioddo",
+  "main": "electron/main.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
   },
   "dependencies": {
-    "next": "^15.1.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "ffmpeg-static": "^5.2.0",
-    "jszip": "^3.10.1"
+    "ffmpeg-static": "^5.2.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.converto.app",
+    "productName": "Converto",
+    "files": [
+      "electron/**/*",
+      "lib/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Converto"
+    }
   }
 }

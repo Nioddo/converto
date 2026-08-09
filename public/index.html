@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Converto</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>🎧 Converto</h1>
+      <p>
+        Pegá links de <strong>YouTube</strong> (video o playlist) o de <strong>Spotify</strong> (playlist, álbum o
+        tema). Buscá los temas, elegí para cada uno si querés un <strong>identificador de voz</strong>, y guardá todo
+        en MP3 320 o FLAC — <strong>sin metadatos ni carátulas</strong>, para reproductores MP3 básicos.
+      </p>
+    </header>
+
+    <div class="card">
+      <label class="block" for="input">Links (uno por línea) — YouTube o Spotify</label>
+      <textarea id="input" placeholder="https://www.youtube.com/watch?v=...&#10;https://www.youtube.com/playlist?list=...&#10;https://open.spotify.com/playlist/..."></textarea>
+
+      <label class="block" style="margin-top:20px">Si el link de YouTube tiene una lista pegada…</label>
+      <div class="formats" id="mode">
+        <label class="fmt active" data-mode="single">
+          <div class="name">Un solo tema</div>
+          <div class="desc">Solo ese video, aunque el link tenga una lista.</div>
+        </label>
+        <label class="fmt" data-mode="playlist">
+          <div class="name">Lista completa</div>
+          <div class="desc">Baja todos los temas de la playlist de YouTube.</div>
+        </label>
+      </div>
+
+      <label class="block" style="margin-top:20px">Formato</label>
+      <div class="formats" id="format">
+        <label class="fmt active" data-format="mp3">
+          <div class="name">MP3 · 320 kbps</div>
+          <div class="desc">Compatible con casi todo. CBR.</div>
+        </label>
+        <label class="fmt" data-format="flac">
+          <div class="name">FLAC</div>
+          <div class="desc">Sin pérdida. Archivos más grandes.</div>
+        </label>
+      </div>
+
+      <label class="checkline" style="margin-top:18px">
+        <input type="checkbox" id="defaultId" checked />
+        <span>Activar el identificador de voz por defecto en los temas encontrados</span>
+      </label>
+
+      <button class="go" id="searchBtn">Buscar temas</button>
+      <div id="banner" class="banner hidden"></div>
+    </div>
+
+    <div class="card hidden" id="tracksCard">
+      <div class="tracks-head">
+        <label class="block" style="margin:0" id="tracksTitle">Temas</label>
+        <div class="mini-btns">
+          <button id="allOn">Todos con voz</button>
+          <button id="allOff">Todos sin voz</button>
+        </div>
+      </div>
+      <p class="hint">🔊 = incluir identificador de voz. El texto por defecto es el título; podés escribir otro.</p>
+      <ul class="tracks" id="tracks"></ul>
+      <button class="go" id="processBtn">Procesar y guardar</button>
+      <div class="bar hidden" id="barWrap"><span id="bar"></span></div>
+    </div>
+
+    <footer>
+      Los temas de Spotify se buscan y bajan desde YouTube. Al procesar varios, elegís una carpeta (puede ser el
+      pendrive o los auriculares) y se guarda cada archivo ahí. El identificador de voz usa el TTS de Google; si falla,
+      el tema igual se convierte sin voz. La primera vez, la app descarga sola el motor de descarga (yt-dlp).
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
