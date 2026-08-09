@@ -39,4 +39,4 @@ jobs:
         shell: bash
         run: |
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Converto $TAG" --notes "Instalador de Converto para Windows."
-          gh release upload "$TAG" dist/*.exe --clobber
+          gh release upload "$TAG" dist/*Setup*.exe --clobber
