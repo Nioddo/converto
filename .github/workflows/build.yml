@@ -1,42 +1,70 @@
-name: Build installer
+name: Publish Windows release
 
-# Construye el instalador de Windows (.exe) en la nube, donde electron-builder
-# tiene los permisos que faltan localmente, y lo sube a la Release indicada.
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag de la release donde subir el instalador (ej: v1.0.0)"
-        required: true
-        default: v1.0.0
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          node-version: 20
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
 
       - name: Instalar dependencias
-        run: npm install
+        run: npm ci
+
+      - name: Auditar dependencias
+        run: npm audit --audit-level=high
+
+      - name: Asignar versión de la actualización
+        id: version
+        shell: pwsh
+        run: |
+          $version = "1.0.${{ github.run_number }}"
+          npm version $version --no-git-tag-version
+          "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Construir instalador (NSIS)
         run: npm run dist
 
-      - name: Subir instalador a la Release
+      - name: Generar hashes SHA-256
+        shell: pwsh
+        run: |
+          Get-FileHash dist/Converto-Setup-*.exe -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } |
+            Set-Content dist/SHA256SUMS.txt -Encoding ascii
+
+      - name: Atestar procedencia del instalador
+        uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45 # v2
+        with:
+          subject-path: |
+            dist/Converto-Setup-*.exe
+            dist/Converto-Setup-*.exe.blockmap
+            dist/latest.yml
+
+      - name: Publicar actualización
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          TAG: v${{ steps.version.outputs.version }}
         shell: bash
         run: |
-          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Converto $TAG" --notes "Instalador de Converto para Windows."
-          gh release upload "$TAG" dist/*Setup*.exe --clobber
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Converto $TAG" --notes "Actualización automática de Converto para Windows." --latest
+          gh release upload "$TAG" dist/Converto-Setup-*.exe dist/Converto-Setup-*.exe.blockmap dist/latest.yml dist/SHA256SUMS.txt --clobber

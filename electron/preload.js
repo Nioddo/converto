@@ -4,6 +4,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   resolve: (input, mode) => ipcRenderer.invoke('resolve', { input, mode }),
   pickFolder: () => ipcRenderer.invoke('pick-folder'),
-  convert: (track, format, folder) => ipcRenderer.invoke('convert', { track, format, folder }),
-  openFolder: (folder) => ipcRenderer.invoke('open-folder', folder),
+  convert: (track, format) => ipcRenderer.invoke('convert', { track, format }),
+  openFolder: () => ipcRenderer.invoke('open-folder'),
 });

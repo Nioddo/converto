@@ -57,6 +57,28 @@ npm start          # abre la app en modo desarrollo
 npm run dist       # genera el instalador en dist/  (Converto-Setup-x.x.x.exe)
 ```
 
+Para abrir o cerrar la consola de diagnóstico usá **F12** o **Ctrl+Shift+I**. Los errores de descarga aparecen
+allí con el título del tema que falló.
+
+La versión instalada busca actualizaciones publicadas en GitHub al arrancar. Cada cambio enviado a la rama
+`main` compila una nueva Release de Windows; la app la descarga y ofrece reiniciarse cuando está lista.
+
+## Seguridad
+
+- `yt-dlp` se descarga únicamente por HTTPS desde su Release oficial, se compara con `SHA2-256SUMS` y se
+  reemplaza de forma atómica. Un archivo incompleto o con hash diferente no se ejecuta.
+- La interfaz usa sandbox, aislamiento de contexto, CSP, permisos denegados y un protocolo interno limitado a
+  sus cuatro recursos estáticos. El IPC solo acepta YouTube/Spotify y escribe en la carpeta elegida por diálogo.
+- El ejecutable activa validación de integridad ASAR y deshabilita `RunAsNode`, `NODE_OPTIONS` y depuración CLI.
+- Cada Release ejecuta `npm audit`, publica `SHA256SUMS.txt` y una attestación de procedencia de GitHub.
+  Dependabot revisa semanalmente dependencias npm y GitHub Actions.
+
+Para verificar manualmente un instalador descargado, compará este resultado con `SHA256SUMS.txt` de la Release:
+
+```powershell
+Get-FileHash .\Converto-Setup-*.exe -Algorithm SHA256
+```
+
 Estructura:
 
 ```

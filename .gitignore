@@ -1,9 +1,11 @@
 /node_modules
 /dist
+/dist-*
 /out
 /build
 /.work
 /.bin
+/.security
 *.log
 .env*.local
 .DS_Store

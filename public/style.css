@@ -25,7 +25,9 @@ html, body {
 
 .wrap { max-width: 780px; margin: 0 auto; padding: 32px 20px 60px; }
 
-header h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.5px; }
+.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.brand img { width: 48px; height: 48px; flex: 0 0 auto; }
+header h1 { font-size: 30px; margin: 0; letter-spacing: 0; }
 header p { margin: 0 0 24px; color: var(--muted); font-size: 15px; line-height: 1.5; }
 
 .card {

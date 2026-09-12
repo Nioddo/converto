@@ -152,6 +152,7 @@ async function process() {
 
   let ok = 0;
   let failed = 0;
+  let firstError = '';
   for (let i = 0; i < state.tracks.length; i++) {
     const t = state.tracks[i];
     setStatus(t, 'doing');
@@ -160,11 +161,12 @@ async function process() {
       await window.api.convert(
         { url: t.url, title: t.title, idOn: t.idOn, idText: t.idText },
         state.format,
-        folder,
       );
       setStatus(t, 'done');
       ok++;
     } catch (err) {
+      console.error(`[Converto] Falló "${t.title}":`, err);
+      if (!firstError) firstError = friendly(err.message);
       setStatus(t, 'failed');
       failed++;
     }
@@ -174,9 +176,9 @@ async function process() {
   $('processBtn').textContent = 'Procesar y guardar';
   if (ok > 0) {
     showBanner('ok', `Listo: guardé ${ok} archivo(s) en la carpeta${failed ? ` · ${failed} fallaron` : ''}. Ya están sueltos, listos para copiar.`);
-    window.api.openFolder(folder);
+    window.api.openFolder();
   } else {
-    showBanner('err', 'No se pudo convertir ningún tema. Revisá tu conexión y volvé a intentar.');
+    showBanner('err', firstError || 'No se pudo convertir ningún tema. Revisá tu conexión y volvé a intentar.');
   }
   setBusy(false);
 }

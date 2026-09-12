@@ -3,13 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'" />
   <title>Converto</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="wrap">
     <header>
-      <h1>🎧 Converto</h1>
+      <div class="brand">
+        <img src="logo.svg" alt="" width="48" height="48" />
+        <h1>Converto</h1>
+      </div>
       <p>
         Pegá links de <strong>YouTube</strong> (video o playlist) o de <strong>Spotify</strong> (playlist, álbum o
         tema). Buscá los temas, elegí para cada uno si querés un <strong>identificador de voz</strong>, y guardá todo
