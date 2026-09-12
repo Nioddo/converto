@@ -37,13 +37,16 @@ La conversión es **real**: baja el mejor audio con `yt-dlp` y lo **recodifica c
 - **YouTube**: video suelto, o playlist completa (con opción de traer solo el tema aunque el link tenga `&list=`).
 - **Spotify**: playlist / álbum / tema. Como Spotify no deja bajar audio, lee la lista (página pública de Spotify)
   y **busca y baja cada tema desde YouTube**. Sin credenciales.
-  - Límites de Spotify: la playlist debe ser **pública**, se leen hasta **~100 temas**, y las playlists creadas
-    por Spotify (Top 50, mixes) normalmente no se pueden leer. Usá playlists tuyas o de otros usuarios.
+  - Límites de Spotify: la playlist debe ser **pública** y se leen hasta **200 temas**. Si Spotify limita
+    temporalmente su API, se conservan los primeros 100 en lugar de fallar. Las playlists creadas por Spotify
+    (Top 50, mixes) normalmente no se pueden leer. Usá playlists tuyas o de otros usuarios.
 - **Sin metadatos ni carátula**: `ffmpeg -vn -map 0:a:0 -map_metadata -1 -map_chapters -1`; MP3 con
   `-id3v2_version 0 -write_id3v1 0`.
 - **Identificador de voz** (opcional, por tema): una voz lee el título (o tu texto) 2-5 s, **embebido en el mismo
   archivo** sin perder calidad de la música (una sola recodificación; FLAC queda en 24-bit igual que sin voz).
 - **Nombres limpios**: NFD + saca acentos, ñ→n, elimina emojis/símbolos, recorta a 80 caracteres.
+- **Listas largas sin bloqueo**: los archivos se copian de forma asíncrona al dispositivo y el procesamiento se
+  puede cancelar sin dejar audios parciales.
 
 ---
 

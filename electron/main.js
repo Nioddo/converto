@@ -17,6 +17,7 @@ const { sanitizeFilename } = require('../lib/sanitize');
 
 let win;
 let selectedFolder = null;
+let activeConversionController = null;
 const UI_URL = 'app://converto/index.html';
 const UI_FILES = new Map([
   ['index.html', 'text/html; charset=utf-8'],
@@ -182,30 +183,53 @@ ipcMain.handle('pick-folder', async (event) => {
 
 ipcMain.handle('convert', async (event, { track, format } = {}) => {
   assertTrustedEvent(event);
-  if (!selectedFolder || !fs.statSync(selectedFolder, { throwIfNoEntry: false })?.isDirectory()) {
+  if (activeConversionController) throw new Error('Ya hay una conversión en curso');
+  const folderStat = selectedFolder && await fs.promises.stat(selectedFolder).catch(() => null);
+  if (!folderStat?.isDirectory()) {
     throw new Error('Elegí nuevamente la carpeta de destino');
   }
   const safeTrack = validateTrack(track);
   const fmt = format === 'flac' ? 'flac' : 'mp3';
-  const { buffer, ext } = await convertTrack({
+  const ext = fmt;
+  const base = sanitizeFilename(safeTrack.title);
+  let filename = `${base}.${ext}`;
+  let full = path.join(selectedFolder, filename);
+  let n = 1;
+  while (await fs.promises.access(full).then(() => true, () => false)) {
+    filename = `${base} (${n}).${ext}`;
+    full = path.join(selectedFolder, filename);
+    n++;
+  }
+  const partial = `${full}.converto-part`;
+  await fs.promises.rm(partial, { force: true });
+  const controller = new AbortController();
+  activeConversionController = controller;
+
+  try {
+    await convertTrack({
     url: safeTrack.url,
     title: safeTrack.title,
     format: fmt,
     identifier: safeTrack.idOn,
     identifierText: safeTrack.idText,
-  });
-
-  const base = sanitizeFilename(safeTrack.title);
-  let filename = `${base}.${ext}`;
-  let full = path.join(selectedFolder, filename);
-  let n = 1;
-  while (fs.existsSync(full)) {
-    filename = `${base} (${n}).${ext}`;
-    full = path.join(selectedFolder, filename);
-    n++;
+      outputPath: partial,
+      signal: controller.signal,
+    });
+    await fs.promises.rename(partial, full);
+    return { filename };
+  } catch (error) {
+    await fs.promises.rm(partial, { force: true }).catch(() => {});
+    throw error;
+  } finally {
+    if (activeConversionController === controller) activeConversionController = null;
   }
-  fs.writeFileSync(full, buffer);
-  return { filename };
+});
+
+ipcMain.handle('cancel-conversion', async (event) => {
+  assertTrustedEvent(event);
+  if (!activeConversionController) return false;
+  activeConversionController.abort();
+  return true;
 });
 
 // Abrir la carpeta destino en el explorador al terminar.

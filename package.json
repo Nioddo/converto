@@ -1,6 +1,6 @@
 {
   "name": "converto",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "private": true,
   "description": "Convierte YouTube y Spotify a MP3 320/FLAC sin metadatos ni caratulas, para reproductores MP3 basicos",
   "author": "Nioddo",

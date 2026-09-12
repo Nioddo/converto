@@ -6,6 +6,7 @@ const state = {
   defaultId: true,
   tracks: [], // { title, url, speech, idOn, idText, els }
   busy: false,
+  cancelRequested: false,
 };
 
 // --- selectores tipo "tarjeta" (modo y formato) ---
@@ -53,6 +54,10 @@ async function search() {
   const input = $('input').value.trim();
   if (!input || state.busy) return;
   setBusy(true);
+  state.cancelRequested = false;
+  $('cancelBtn').classList.remove('hidden');
+  $('cancelBtn').disabled = false;
+  $('cancelBtn').textContent = 'Cancelar procesamiento';
   hideBanner();
   $('tracksCard').classList.add('hidden');
   $('searchBtn').textContent = 'Buscando…';
@@ -154,6 +159,7 @@ async function process() {
   let failed = 0;
   let firstError = '';
   for (let i = 0; i < state.tracks.length; i++) {
+    if (state.cancelRequested) break;
     const t = state.tracks[i];
     setStatus(t, 'doing');
     $('processBtn').textContent = `Procesando ${i + 1}/${state.tracks.length}…`;
@@ -165,6 +171,10 @@ async function process() {
       setStatus(t, 'done');
       ok++;
     } catch (err) {
+      if (state.cancelRequested) {
+        setStatus(t, '');
+        break;
+      }
       console.error(`[Converto] Falló "${t.title}":`, err);
       if (!firstError) firstError = friendly(err.message);
       setStatus(t, 'failed');
@@ -174,7 +184,11 @@ async function process() {
   }
 
   $('processBtn').textContent = 'Procesar y guardar';
-  if (ok > 0) {
+  $('cancelBtn').classList.add('hidden');
+  if (state.cancelRequested) {
+    showBanner(ok > 0 ? 'ok' : 'err', `Proceso cancelado. Se guardaron ${ok} archivo(s) completos.`);
+    if (ok > 0) window.api.openFolder();
+  } else if (ok > 0) {
     showBanner('ok', `Listo: guardé ${ok} archivo(s) en la carpeta${failed ? ` · ${failed} fallaron` : ''}. Ya están sueltos, listos para copiar.`);
     window.api.openFolder();
   } else {
@@ -182,6 +196,14 @@ async function process() {
   }
   setBusy(false);
 }
+
+$('cancelBtn').addEventListener('click', async () => {
+  if (!state.busy || state.cancelRequested) return;
+  state.cancelRequested = true;
+  $('cancelBtn').disabled = true;
+  $('cancelBtn').textContent = 'Cancelando…';
+  try { await window.api.cancelConversion(); } catch (error) { console.error('[Converto] No se pudo cancelar:', error); }
+});
 
 function setBusy(b) {
   state.busy = b;

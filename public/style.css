@@ -95,6 +95,12 @@ button.go {
 }
 button.go:disabled { opacity: .5; cursor: not-allowed; }
 
+button.cancel {
+  margin-top: 10px; width: 100%; border: 1px solid #70373a; border-radius: 8px;
+  padding: 10px; color: #ffb3b3; background: #2a1618; font-weight: 700; cursor: pointer;
+}
+button.cancel:disabled { opacity: .5; cursor: not-allowed; }
+
 .bar {
   height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden;
   margin: 12px 0 4px; border: 1px solid var(--border);
