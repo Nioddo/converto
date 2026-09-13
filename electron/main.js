@@ -231,6 +231,25 @@ ipcMain.handle('cancel-conversion', async (event) => {
   return true;
 });
 
+ipcMain.handle('save-failure-report', async (event, { failures } = {}) => {
+  assertTrustedEvent(event);
+  if (!selectedFolder || !Array.isArray(failures) || failures.length > 200) {
+    throw new Error('Informe de errores inválido');
+  }
+  const reportPath = path.join(selectedFolder, 'Converto-errores.txt');
+  if (!failures.length) {
+    await fs.promises.rm(reportPath, { force: true });
+    return false;
+  }
+  const lines = failures.map((failure, index) => {
+    const title = requiredString(failure?.title, 'Título del error', 500).replace(/[\r\n]+/g, ' ');
+    const message = requiredString(failure?.message, 'Mensaje del error', 2_000).replace(/[\r\n]+/g, ' ');
+    return `${index + 1}. ${title}\r\n   ${message}`;
+  });
+  await fs.promises.writeFile(reportPath, `${lines.join('\r\n\r\n')}\r\n`, 'utf8');
+  return true;
+});
+
 // Abrir la carpeta destino en el explorador al terminar.
 ipcMain.handle('open-folder', async (event) => {
   assertTrustedEvent(event);

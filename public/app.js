@@ -165,6 +165,7 @@ async function process() {
   let skipped = 0;
   let failed = 0;
   let firstError = '';
+  const failures = [];
   for (let i = 0; i < state.tracks.length; i++) {
     if (state.cancelRequested) break;
     const t = state.tracks[i];
@@ -185,6 +186,7 @@ async function process() {
       }
       console.error(`[Converto] Falló "${t.title}":`, err);
       if (!firstError) firstError = friendly(err.message);
+      failures.push({ title: t.title, message: String(err.message || err) });
       setStatus(t, 'failed');
       failed++;
     }
@@ -193,17 +195,23 @@ async function process() {
 
   $('processBtn').textContent = 'Procesar y guardar';
   $('cancelBtn').classList.add('hidden');
+  try { await window.api.saveFailureReport(failures); } catch (error) {
+    console.error('[Converto] No se pudo guardar el informe de errores:', error);
+  }
   if (state.cancelRequested) {
     showBanner(ok > 0 ? 'ok' : 'err', `Proceso cancelado. Se guardaron ${ok} archivo(s) completos.`);
     if (ok > 0) window.api.openFolder();
   } else if (ok > 0) {
-    showBanner('ok', `Listo: guardé ${ok} archivo(s)${skipped ? ` · ${skipped} ya existían` : ''}${failed ? ` · ${failed} fallaron` : ''}. Ya están sueltos, listos para copiar.`);
+    const failureDetail = failed && firstError ? ` Primer error: ${firstError}` : '';
+    const reportDetail = failed ? ' Dejé el detalle en Converto-errores.txt.' : '';
+    showBanner('ok', `Listo: guardé ${ok} archivo(s)${skipped ? ` · ${skipped} ya existían` : ''}${failed ? ` · ${failed} fallaron` : ''}. Ya están sueltos, listos para copiar.${failureDetail}${reportDetail}`);
     window.api.openFolder();
   } else if (skipped > 0) {
     showBanner('ok', `No había nada nuevo para descargar: ${skipped} archivo(s) ya existían en la carpeta.`);
     window.api.openFolder();
   } else {
-    showBanner('err', firstError || 'No se pudo convertir ningún tema. Revisá tu conexión y volvé a intentar.');
+    const reportDetail = failed ? ' Dejé el detalle en Converto-errores.txt.' : '';
+    showBanner('err', `${firstError || 'No se pudo convertir ningún tema. Revisá tu conexión y volvé a intentar.'}${reportDetail}`);
   }
   setBusy(false);
 }
