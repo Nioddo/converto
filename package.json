@@ -1,6 +1,6 @@
 {
   "name": "converto",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": true,
   "description": "Convierte YouTube y Spotify a MP3 320/FLAC sin metadatos ni caratulas, para reproductores MP3 basicos",
   "author": "Nioddo",
@@ -11,6 +11,7 @@
     "dist": "npm run icon && electron-builder --win nsis --publish never"
   },
   "dependencies": {
+    "@deno/win32-x64": "^2.9.6",
     "electron-updater": "^6.8.9",
     "ffmpeg-static": "^5.3.0"
   },
@@ -43,7 +44,8 @@
       "package.json"
     ],
     "asarUnpack": [
-      "node_modules/ffmpeg-static/**"
+      "node_modules/ffmpeg-static/**",
+      "node_modules/@deno/win32-x64/**"
     ],
     "win": {
       "icon": "build/icon.png",

@@ -44,6 +44,12 @@ function friendly(msg) {
   if (m.includes('SPOTIFY_EMBED_404')) return 'No encontré esa playlist/álbum de Spotify. Revisá el link.';
   if (m.includes('SPOTIFY_EMBED_')) return 'No pude leer esa playlist de Spotify. Asegurate de que sea pública.';
   if (m.includes('SPOTIFY_BAD_URL')) return 'Ese link de Spotify no parece una playlist, álbum o tema.';
+  if (/HTTP Error 429|Too Many Requests|Sign in to confirm|not a bot/i.test(m))
+    return 'YouTube limitó temporalmente las descargas. Esperá unos minutos y volvé a procesar: las canciones ya guardadas se omitirán.';
+  if (/Requested format is not available|No video formats found/i.test(m))
+    return 'YouTube no entregó un formato de audio para este tema. Converto se actualizará para usar el extractor compatible más reciente.';
+  if (/Unable to download|timed? out|ENOTFOUND|ECONNRESET/i.test(m))
+    return 'Se cortó la conexión durante la descarga. Volvé a procesar: las canciones completas ya guardadas se omitirán.';
   // limpiar el prefijo "Error invoking remote method ..."
   const i = m.indexOf('Error: ');
   return i >= 0 ? m.slice(i + 7) : m;

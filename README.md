@@ -49,6 +49,8 @@ La conversión es **real**: baja el mejor audio con `yt-dlp` y lo **recodifica c
   puede cancelar sin dejar audios parciales.
 - **Sin duplicados**: se eliminan IDs repetidos de Spotify/YouTube y, si un audio completo ya existe en la carpeta,
   se omite en lugar de descargarlo otra vez como `(1)` o `(2)`.
+- **Descargas resistentes**: incluye el runtime JavaScript requerido por YouTube y aplica pausas/reintentos en
+  tandas grandes para reducir bloqueos temporales.
 
 ---
 
