@@ -47,6 +47,8 @@ La conversión es **real**: baja el mejor audio con `yt-dlp` y lo **recodifica c
 - **Nombres limpios**: NFD + saca acentos, ñ→n, elimina emojis/símbolos, recorta a 80 caracteres.
 - **Listas largas sin bloqueo**: los archivos se copian de forma asíncrona al dispositivo y el procesamiento se
   puede cancelar sin dejar audios parciales.
+- **Sin duplicados**: se eliminan IDs repetidos de Spotify/YouTube y, si un audio completo ya existe en la carpeta,
+  se omite en lugar de descargarlo otra vez como `(1)` o `(2)`.
 
 ---
 

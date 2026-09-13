@@ -54,10 +54,6 @@ async function search() {
   const input = $('input').value.trim();
   if (!input || state.busy) return;
   setBusy(true);
-  state.cancelRequested = false;
-  $('cancelBtn').classList.remove('hidden');
-  $('cancelBtn').disabled = false;
-  $('cancelBtn').textContent = 'Cancelar procesamiento';
   hideBanner();
   $('tracksCard').classList.add('hidden');
   $('searchBtn').textContent = 'Buscando…';
@@ -149,6 +145,10 @@ async function process() {
   }
 
   setBusy(true);
+  state.cancelRequested = false;
+  $('cancelBtn').classList.remove('hidden');
+  $('cancelBtn').disabled = false;
+  $('cancelBtn').textContent = 'Cancelar procesamiento';
   hideBanner();
   const bar = $('bar');
   $('barWrap').classList.remove('hidden');
@@ -156,6 +156,7 @@ async function process() {
   state.tracks.forEach((t) => setStatus(t, ''));
 
   let ok = 0;
+  let skipped = 0;
   let failed = 0;
   let firstError = '';
   for (let i = 0; i < state.tracks.length; i++) {
@@ -164,12 +165,13 @@ async function process() {
     setStatus(t, 'doing');
     $('processBtn').textContent = `Procesando ${i + 1}/${state.tracks.length}…`;
     try {
-      await window.api.convert(
+      const result = await window.api.convert(
         { url: t.url, title: t.title, idOn: t.idOn, idText: t.idText },
         state.format,
       );
       setStatus(t, 'done');
-      ok++;
+      if (result.skipped) skipped++;
+      else ok++;
     } catch (err) {
       if (state.cancelRequested) {
         setStatus(t, '');
@@ -189,7 +191,10 @@ async function process() {
     showBanner(ok > 0 ? 'ok' : 'err', `Proceso cancelado. Se guardaron ${ok} archivo(s) completos.`);
     if (ok > 0) window.api.openFolder();
   } else if (ok > 0) {
-    showBanner('ok', `Listo: guardé ${ok} archivo(s) en la carpeta${failed ? ` · ${failed} fallaron` : ''}. Ya están sueltos, listos para copiar.`);
+    showBanner('ok', `Listo: guardé ${ok} archivo(s)${skipped ? ` · ${skipped} ya existían` : ''}${failed ? ` · ${failed} fallaron` : ''}. Ya están sueltos, listos para copiar.`);
+    window.api.openFolder();
+  } else if (skipped > 0) {
+    showBanner('ok', `No había nada nuevo para descargar: ${skipped} archivo(s) ya existían en la carpeta.`);
     window.api.openFolder();
   } else {
     showBanner('err', firstError || 'No se pudo convertir ningún tema. Revisá tu conexión y volvé a intentar.');

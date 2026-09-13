@@ -192,14 +192,13 @@ ipcMain.handle('convert', async (event, { track, format } = {}) => {
   const fmt = format === 'flac' ? 'flac' : 'mp3';
   const ext = fmt;
   const base = sanitizeFilename(safeTrack.title);
-  let filename = `${base}.${ext}`;
-  let full = path.join(selectedFolder, filename);
-  let n = 1;
-  while (await fs.promises.access(full).then(() => true, () => false)) {
-    filename = `${base} (${n}).${ext}`;
-    full = path.join(selectedFolder, filename);
-    n++;
+  const filename = `${base}.${ext}`;
+  const full = path.join(selectedFolder, filename);
+  const existing = await fs.promises.stat(full).catch(() => null);
+  if (existing?.isFile() && existing.size > 1_024) {
+    return { filename, skipped: true };
   }
+  if (existing) await fs.promises.rm(full, { force: true });
   const partial = `${full}.converto-part`;
   await fs.promises.rm(partial, { force: true });
   const controller = new AbortController();
